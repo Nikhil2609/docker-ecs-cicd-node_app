@@ -1,22 +1,44 @@
 version: 0.2
 
+# phases:
+#   install:
+#     runtime-versions:
+#       nodejs: 18  
+#     commands:
+#       - npm install
+#   build:
+#     commands:
+#       - npm run build
+#   post_build:
+#     commands:
+#       - echo "▶️ Preparing deployment bundle"
+
+
+# artifacts:
+#   files:
+#     - dist/**/*
+#     - scripts/**/*
+#     - package.json
+#     - appspec.yml
+
+# buildspec.yml
+version: 0.2
+
 phases:
-  install:
-    runtime-versions:
-      nodejs: 18  
+  pre_build:
     commands:
-      - npm install
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 677674062026.dkr.ecr.ap-south-1.amazonaws.com/docker-image-repository:latest)
   build:
     commands:
-      - npm run build
+      - echo Build started on `date`
+      - docker build -t node-app .
+      - docker tag node-app:latest 677674062026.dkr.ecr.ap-south-1.amazonaws.com/docker-image-repository:latest
   post_build:
     commands:
-      - echo "▶️ Preparing deployment bundle"
-
-
+      - echo Build completed on `date`
+      - docker push 677674062026.dkr.ecr.ap-south-1.amazonaws.com/docker-image-repository:latest
+      - echo Image push on ECR repository
 artifacts:
-  files:
-    - dist/**/*
-    - scripts/**/*
-    - package.json
-    - appspec.yml
+  files: '**/*'
